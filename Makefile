@@ -1,4 +1,4 @@
-PROJECT=yatch
+PROJECT=yacht
 LD65_FLAGS=
 CA65_FLAGS=
 EMULATOR=/mnt/c/NESDev/Mesen.exe
