@@ -52,49 +52,12 @@ unsigned char wram_array[0x2000];
 #pragma rodata-name ("RODATA")
 #pragma code-name ("CODE")
 
-const unsigned char palette_bg[] = {
-                                    0x02,0x1a,0x2a,0x3a,0x02,0x07,0x17,0x3c,0x02,0x07,0x28,0x0f,0x02,0x09,0x19,0x29
-};
-
-const unsigned char palette_spr[]={
-                                   0x02,0x1a,0x2a,0x3a,0x02,0x07,0x17,0x26,0x02,0x06,0x16,0x26,0x02,0x09,0x19,0x29
-};
-
-const unsigned char palette_thunder[] = {
-                                         0x02,0x28,0x38,0x30,0x02,0x07,0x17,0x3c,0x02,0x07,0x28,0x0f,0x02,0x09,0x19,0x29
-};
-
-const unsigned char head_per_direction[] = { 0x03, 0x04, 0x05, 0x06 };
-const unsigned char tail_per_direction[] = { 0x0d, 0x0e, 0x0f, 0x10 };
-const unsigned char middle_tile[] = {
-                                     0x07, 0x07, 0x0a, 0x09,
-                                     0x07, 0x07, 0x0b, 0x0c,
-                                     0x0c, 0x09, 0x08, 0x08,
-                                     0x0b, 0x0a, 0x08, 0x08
-};
-
-const unsigned char over_string[] = {0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77};
-const unsigned char start_string[] = {0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67};
+const unsigned char palette_bg[16]={ 0x1a,0x1a,0x29,0x3a,0x1a,0x30,0x00,0x0f,0x1a,0x07,0x28,0x0f,0x1a,0x09,0x19,0x29 };
+const unsigned char palette_spr[16]={ 0x1a,0x1a,0x29,0x3a,0x1a,0x30,0x00,0x0f,0x1a,0x07,0x28,0x0f,0x1a,0x09,0x19,0x29 };
 
 void draw_sprites (void);
 void go_to_title (void);
 void start_game (void);
-void moving (void);
-void game_over (void);
-
-void thunder (void) {
-  sfx_play(0, 0);
-
-  for(i = 0; i < 12; i++) {
-    ppu_wait_nmi();
-    pal_bg(palette_thunder);
-    ppu_wait_nmi();
-    ppu_wait_nmi();
-    ppu_wait_nmi();
-    ppu_wait_nmi();
-    pal_bg(palette_bg);
-  }
-}
 
 void main (void) {
   set_mirroring(MIRROR_HORIZONTAL);
@@ -136,7 +99,6 @@ void main (void) {
         ppu_wait_nmi();
         pad_poll(0);
       } while((get_pad_new(0) & PAD_START) == 0);
-      thunder();
       if (unseeded) {
         seed_rng();
         unseeded = 0;
@@ -195,19 +157,6 @@ void go_to_title (void) {
   draw_sprites();
   ppu_on_all(); //	turn on screen
   current_game_state = Title;
-}
-
-void game_over (void) {
-  multi_vram_buffer_horz(over_string, 8, NTADR_A(12, 12));
-  multi_vram_buffer_horz(start_string, 8, NTADR_A(12, 13));
-
-  do {
-    ppu_wait_nmi();
-    pad_poll(0);
-  } while((get_pad_new(0) & PAD_START) == 0);
-
-  clear_vram_buffer();
-  go_to_title();
 }
 
 void draw_sprites (void) {
