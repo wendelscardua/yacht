@@ -91,19 +91,20 @@ void main (void) {
 
   while (1){ // infinite loop
     ppu_wait_nmi();
+    pad_poll(0);
     rand16();
 
     switch (current_game_state) {
     case Title:
-      do {
-        ppu_wait_nmi();
-        pad_poll(0);
-      } while((get_pad_new(0) & PAD_START) == 0);
-      if (unseeded) {
-        seed_rng();
-        unseeded = 0;
+      if (get_pad_new(0) & PAD_START) {
+        if (unseeded) {
+          seed_rng();
+          unseeded = 0;
+        }
+        start_game();
       }
-      start_game();
+      break;
+    case PlayerWaitRoll:
       break;
     }
 
@@ -132,8 +133,13 @@ void main (void) {
   }
 }
 
+const unsigned char text_box_empty[] = {0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
+const unsigned char text_box_press_a_to_roll[] = {0x21,0x1a,0x03,0x32,0x4f,0x4c,0x4c,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
+
 void go_to_player_wait_roll (void) {
   current_game_state = PlayerWaitRoll;
+  multi_vram_buffer_horz(text_box_press_a_to_roll, 22, NTADR_A(4, 24));
+  multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
 }
 
 void start_game (void) {
