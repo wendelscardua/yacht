@@ -132,6 +132,10 @@ void main (void) {
   }
 }
 
+void go_to_player_wait_roll (void) {
+  current_game_state = PlayerWaitRoll;
+}
+
 void start_game (void) {
   ppu_off(); // screen off
   pal_bg(palette_bg); //	load the BG palette
@@ -145,7 +149,7 @@ void start_game (void) {
 
   memfill(wram_array,0,0x2000);
 
-  current_game_state = PlayerWaitRoll;
+  go_to_player_wait_roll();
 }
 
 void go_to_title (void) {
