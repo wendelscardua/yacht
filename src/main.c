@@ -56,82 +56,6 @@ const unsigned char palette_bg[16]={ 0x1a,0x1a,0x29,0x3a,0x1a,0x30,0x00,0x0f,0x1
 const unsigned char palette_spr[16]={ 0x1a,0x1a,0x29,0x3a,0x1a,0x30,0x00,0x0f,0x1a,0x07,0x28,0x0f,0x1a,0x09,0x19,0x29 };
 
 void draw_sprites (void);
-void go_to_title (void);
-void start_game (void);
-
-void main (void) {
-  set_mirroring(MIRROR_HORIZONTAL);
-  bank_spr(1);
-  irq_array[0] = 0xff; // end of data
-  set_irq_ptr(irq_array); // point to this array
-
-  // clear the WRAM, not done by the init code
-  // memfill(void *dst,unsigned char value,unsigned int len);
-  memfill(wram_array,0,0x2000);
-
-  ppu_off(); // screen off
-  pal_bg(palette_bg); //	load the BG palette
-  pal_spr(palette_spr); // load the sprite palette
-  // load red alpha and drawing as bg chars
-  // and unused as sprites
-  set_chr_mode_2(0);
-  set_chr_mode_3(1);
-  set_chr_mode_4(2);
-  set_chr_mode_5(3);
-  set_chr_mode_0(4);
-  set_chr_mode_1(6);
-
-  go_to_title();
-
-  unseeded = 1;
-
-
-  set_vram_buffer();
-  clear_vram_buffer();
-
-  while (1){ // infinite loop
-    ppu_wait_nmi();
-    pad_poll(0);
-    rand16();
-
-    switch (current_game_state) {
-    case Title:
-      if (get_pad_new(0) & PAD_START) {
-        if (unseeded) {
-          seed_rng();
-          unseeded = 0;
-        }
-        start_game();
-      }
-      break;
-    case PlayerWaitRoll:
-      break;
-    }
-
-    // load the irq array with values it parse
-    // ! CHANGED it, double buffered so we aren't editing the same
-    // array that the irq system is reading from
-
-    double_buffer_index = 0;
-
-    // populate double buffer here
-
-    double_buffer[double_buffer_index++] = 0xff; // end of data
-
-    draw_sprites();
-
-    // wait till the irq system is done before changing it
-    // this could waste a lot of CPU time, so we do it last
-    while(!is_irq_done() ){ // have we reached the 0xff, end of data
-      // is_irq_done() returns zero if not done
-      // do nothing while we wait
-    }
-
-    // copy from double_buffer to the irq_array
-    // memcpy(void *dst,void *src,unsigned int len);
-    memcpy(irq_array, double_buffer, sizeof(irq_array));
-  }
-}
 
 const unsigned char text_box_empty[] = {0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
 const unsigned char text_box_press_a_to_roll[] = {0x21,0x1a,0x03,0x32,0x4f,0x4c,0x4c,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
@@ -140,6 +64,12 @@ void go_to_player_wait_roll (void) {
   current_game_state = PlayerWaitRoll;
   multi_vram_buffer_horz(text_box_press_a_to_roll, 22, NTADR_A(4, 24));
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
+}
+
+void go_to_player_rolling (void) {
+  current_game_state = PlayerRolling;
+  multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 24));
+  // TODO: start rolling
 }
 
 void start_game (void) {
@@ -167,6 +97,83 @@ void go_to_title (void) {
   draw_sprites();
   ppu_on_all(); //	turn on screen
   current_game_state = Title;
+}
+
+  void main (void) {
+    set_mirroring(MIRROR_HORIZONTAL);
+    bank_spr(1);
+    irq_array[0] = 0xff; // end of data
+    set_irq_ptr(irq_array); // point to this array
+
+    // clear the WRAM, not done by the init code
+    // memfill(void *dst,unsigned char value,unsigned int len);
+    memfill(wram_array,0,0x2000);
+
+    ppu_off(); // screen off
+    pal_bg(palette_bg); //	load the BG palette
+    pal_spr(palette_spr); // load the sprite palette
+    // load red alpha and drawing as bg chars
+    // and unused as sprites
+    set_chr_mode_2(0);
+    set_chr_mode_3(1);
+    set_chr_mode_4(2);
+    set_chr_mode_5(3);
+    set_chr_mode_0(4);
+    set_chr_mode_1(6);
+
+    go_to_title();
+
+    unseeded = 1;
+
+
+    set_vram_buffer();
+    clear_vram_buffer();
+
+  while (1){ // infinite loop
+    ppu_wait_nmi();
+    pad_poll(0);
+    rand16();
+
+    switch (current_game_state) {
+    case Title:
+      if (get_pad_new(0) & PAD_START) {
+        if (unseeded) {
+          seed_rng();
+          unseeded = 0;
+        }
+        start_game();
+      }
+      break;
+    case PlayerWaitRoll:
+      if (get_pad_new(0) & PAD_START) {
+        go_to_player_rolling();
+      }
+      break;
+    }
+
+    // load the irq array with values it parse
+    // ! CHANGED it, double buffered so we aren't editing the same
+    // array that the irq system is reading from
+
+    double_buffer_index = 0;
+
+    // populate double buffer here
+
+    double_buffer[double_buffer_index++] = 0xff; // end of data
+
+    draw_sprites();
+
+    // wait till the irq system is done before changing it
+    // this could waste a lot of CPU time, so we do it last
+    while(!is_irq_done() ){ // have we reached the 0xff, end of data
+      // is_irq_done() returns zero if not done
+      // do nothing while we wait
+    }
+
+    // copy from double_buffer to the irq_array
+    // memcpy(void *dst,void *src,unsigned int len);
+    memcpy(irq_array, double_buffer, sizeof(irq_array));
+  }
 }
 
 void draw_sprites (void) {
