@@ -40,6 +40,13 @@ unsigned char dice_roll_speed[5];
 unsigned char dice_roll_counter[5];
 unsigned char stop_dice;
 
+unsigned char player_score[12];
+unsigned char player_score_locked[12];
+unsigned char cpu_score[12];
+unsigned char cpu_score_locked[12];
+unsigned int player_points;
+unsigned int cpu_points;
+
 #pragma bss-name(pop)
 // should be in the regular 0x300 ram now
 
@@ -100,6 +107,13 @@ void start_game (void) {
     dice_roll_speed[i] = 0;
   }
 
+  for(i = 0; i < 12; ++i) {
+    player_score[i] = player_score_locked[i] =
+      cpu_score[i] = cpu_score_locked[i] = 0;
+  }
+
+  player_points = cpu_points = 0;
+
   go_to_player_wait_roll();
 }
 
@@ -134,16 +148,6 @@ void rolling_dice (void) {
       }
     }
   }
-
-  if (stop_dice) {
-    for(i = 0; i < 5; ++i) {
-      if (dice_roll_speed[i]) break;
-    }
-    if (i == 5) {
-      // TODO: next state instead
-      go_to_player_wait_roll();
-    }
-  }
 }
 
 void go_to_title (void) {
@@ -157,35 +161,42 @@ void go_to_title (void) {
   current_game_state = Title;
 }
 
-  void main (void) {
-    set_mirroring(MIRROR_HORIZONTAL);
-    bank_spr(1);
-    irq_array[0] = 0xff; // end of data
-    set_irq_ptr(irq_array); // point to this array
+void compute_available_scores (void) {
 
-    // clear the WRAM, not done by the init code
-    // memfill(void *dst,unsigned char value,unsigned int len);
-    memfill(wram_array,0,0x2000);
+}
 
-    ppu_off(); // screen off
-    pal_bg(palette_bg); //	load the BG palette
-    pal_spr(palette_spr); // load the sprite palette
-    // load red alpha and drawing as bg chars
-    // and unused as sprites
-    set_chr_mode_2(0);
-    set_chr_mode_3(1);
-    set_chr_mode_4(2);
-    set_chr_mode_5(3);
-    set_chr_mode_0(4);
-    set_chr_mode_1(6);
+void go_to_player_may_reroll (void) {
+}
 
-    go_to_title();
+void main (void) {
+  set_mirroring(MIRROR_HORIZONTAL);
+  bank_spr(1);
+  irq_array[0] = 0xff; // end of data
+  set_irq_ptr(irq_array); // point to this array
 
-    unseeded = 1;
+  // clear the WRAM, not done by the init code
+  // memfill(void *dst,unsigned char value,unsigned int len);
+  memfill(wram_array,0,0x2000);
+
+  ppu_off(); // screen off
+  pal_bg(palette_bg); //	load the BG palette
+  pal_spr(palette_spr); // load the sprite palette
+  // load red alpha and drawing as bg chars
+  // and unused as sprites
+  set_chr_mode_2(0);
+  set_chr_mode_3(1);
+  set_chr_mode_4(2);
+  set_chr_mode_5(3);
+  set_chr_mode_0(4);
+  set_chr_mode_1(6);
+
+  go_to_title();
+
+  unseeded = 1;
 
 
-    set_vram_buffer();
-    clear_vram_buffer();
+  set_vram_buffer();
+  clear_vram_buffer();
 
   while (1){ // infinite loop
     ppu_wait_nmi();
@@ -210,6 +221,15 @@ void go_to_title (void) {
       break;
     case PlayerRolling:
       rolling_dice();
+      for(i = 0; i < 5; ++i) {
+        if (dice_roll_speed[i]) break;
+      }
+      if (i == 5) {
+        compute_available_scores();
+        go_to_player_may_reroll();
+      }
+      break;
+    case PlayerMayReroll:
       break;
     }
 
