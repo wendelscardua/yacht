@@ -39,6 +39,20 @@ unsigned char dice[5];
 unsigned char dice_roll_speed[5];
 unsigned char dice_roll_counter[5];
 unsigned char stop_dice;
+unsigned char histo_dice[7];
+
+#define ONES 0
+#define TWOS 1
+#define THREES 2
+#define FOURS 3
+#define FIVES 4
+#define SIXES 5
+#define FULL_HOUSE 6
+#define FOUR_OF_A_KIND 7
+#define LITTLE_STRAIGHT 8
+#define BIG_STRAIGHT 9
+#define CHOICE 10
+#define YACHT 11
 
 unsigned char player_score[12];
 unsigned char player_score_locked[12];
@@ -161,11 +175,49 @@ void go_to_title (void) {
   current_game_state = Title;
 }
 
-void compute_available_scores (void) {
+void display_score (unsigned int score, unsigned int address) {
+  // TODO
+}
 
+void compute_available_scores (unsigned char *score, unsigned char *score_locked) {
+  for(i = 1; i <= 6; ++i) {
+    histo_dice[i] = 0;
+  }
+
+  for(i = 0; i < 5; ++i) {
+    ++histo_dice[dice[i]];
+  }
+
+  if (!score_locked[ONES]) {
+    score[ONES] = histo_dice[1];
+    display_score(score[ONES], NTADR_A(20, 3));
+  }
+  if (!score_locked[TWOS]) {
+    score[TWOS] = 2 * histo_dice[2];
+    display_score(score[TWOS], NTADR_A(20, 4));
+  }
+  if (!score_locked[THREES]) {
+    score[THREES] = 3 * histo_dice[3];
+    display_score(score[THREES], NTADR_A(20, 5));
+  }
+  if (!score_locked[FOURS]) {
+    score[FOURS] = 4 * histo_dice[4];
+    display_score(score[FOURS], NTADR_A(20, 6));
+  }
+  if (!score_locked[FIVES]) {
+    score[FIVES] = 5 * histo_dice[5];
+    display_score(score[FIVES], NTADR_A(20, 7));
+  }
+  if (!score_locked[SIXES]) {
+    score[SIXES] = 6 * histo_dice[6];
+    display_score(score[SIXES], NTADR_A(20, 8));
+  }
+
+  // TODO continue
 }
 
 void go_to_player_may_reroll (void) {
+  // TODO
 }
 
 void main (void) {
@@ -225,7 +277,7 @@ void main (void) {
         if (dice_roll_speed[i]) break;
       }
       if (i == 5) {
-        compute_available_scores();
+        compute_available_scores(player_score, player_score_locked);
         go_to_player_may_reroll();
       }
       break;
