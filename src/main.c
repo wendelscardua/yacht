@@ -20,7 +20,7 @@ unsigned char pad1;
 unsigned char pad1_new;
 unsigned char double_buffer_index;
 
-unsigned char temp, i, unseeded;
+unsigned char temp, i, unseeded, temp_x, temp_y;
 unsigned int temp_int;
 
 enum game_state {
@@ -34,6 +34,11 @@ enum game_state {
                  CPUSelectScoring,
                  GameEnd
 } current_game_state;
+
+unsigned char dice[5];
+unsigned char dice_roll_speed[5];
+unsigned char dice_roll_counter[5];
+unsigned char stop_dice;
 
 #pragma bss-name(pop)
 // should be in the regular 0x300 ram now
@@ -69,7 +74,12 @@ void go_to_player_wait_roll (void) {
 void go_to_player_rolling (void) {
   current_game_state = PlayerRolling;
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 24));
-  // TODO: start rolling
+  multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
+  for(i = 0; i < 5; ++i) {
+    dice_roll_speed[i] = (rand8() % 16) + 45;
+    dice_roll_counter[i] = 0;
+  }
+  stop_dice = 1;
 }
 
 void start_game (void) {
@@ -77,7 +87,7 @@ void start_game (void) {
   pal_bg(palette_bg); //	load the BG palette
   pal_spr(palette_spr); // load the sprite palette
 
-  // draw some things
+                        // draw some things
   vram_adr(NTADR_A(0,0));
   unrle(main_nametable);
 
@@ -85,7 +95,55 @@ void start_game (void) {
 
   memfill(wram_array,0,0x2000);
 
+  for(i = 0; i < 5; ++i) {
+    dice[i] = i + 1;
+    dice_roll_speed[i] = 0;
+  }
+
   go_to_player_wait_roll();
+}
+
+void render_die (unsigned char index) {
+  temp_y = 20;
+  temp_x = 4 + 4 * index;
+  temp = dice[index] - 1;
+  one_vram_buffer(0x60 + 2 * temp, NTADR_A(temp_x, temp_y));
+  one_vram_buffer(0x61 + 2 * temp, NTADR_A(temp_x+1, temp_y));
+  one_vram_buffer(0x70 + 2 * temp, NTADR_A(temp_x, temp_y+1));
+  one_vram_buffer(0x71 + 2 * temp, NTADR_A(temp_x+1, temp_y+1));
+  one_vram_buffer(0x80 + 2 * temp, NTADR_A(temp_x, temp_y+2));
+  one_vram_buffer(0x81 + 2 * temp, NTADR_A(temp_x+1, temp_y+2));
+}
+
+void rolling_dice (void) {
+  for(i = 0; i < 5; ++i) {
+    if (dice_roll_speed[i]) {
+      dice_roll_counter[i] += (dice_roll_speed[i] + 1) / 2;
+      if (dice_roll_counter[i] >= 60) {
+        dice_roll_counter[i] -= 60;
+
+        do {
+          dice[i] = rand8() & 7;
+        } while (!dice[i] || dice[i] == 7);
+
+        render_die(i);
+
+        if (stop_dice) {
+          --dice_roll_speed[i];
+        }
+      }
+    }
+  }
+
+  if (stop_dice) {
+    for(i = 0; i < 5; ++i) {
+      if (dice_roll_speed[i]) break;
+    }
+    if (i == 5) {
+      // TODO: next state instead
+      go_to_player_wait_roll();
+    }
+  }
 }
 
 void go_to_title (void) {
@@ -131,6 +189,7 @@ void go_to_title (void) {
 
   while (1){ // infinite loop
     ppu_wait_nmi();
+    clear_vram_buffer();
     pad_poll(0);
     rand16();
 
@@ -145,9 +204,12 @@ void go_to_title (void) {
       }
       break;
     case PlayerWaitRoll:
-      if (get_pad_new(0) & PAD_START) {
+      if (get_pad_new(0) & PAD_A) {
         go_to_player_rolling();
       }
+      break;
+    case PlayerRolling:
+      rolling_dice();
       break;
     }
 
