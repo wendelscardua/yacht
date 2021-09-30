@@ -451,7 +451,14 @@ void cpu_ai (void) {
       }
       break;
     case FULL_HOUSE:
-      go_to_cpu_select_scoring();
+      if (cpu_score[FULL_HOUSE] == 0) {
+        for(i = 0; i < 5; i++) {
+          if (histo_dice[dice[i]] < 2) roll_die(i);
+        }
+        go_to_cpu_rolling_again();
+      } else {
+        go_to_cpu_select_scoring();
+      }
       break;
     case FOUR_OF_A_KIND:
       for(i = 1; i <= 6; i++) {
@@ -494,7 +501,14 @@ void cpu_ai (void) {
       }
       break;
     case YACHT:
-      go_to_cpu_select_scoring();
+      if (cpu_score[YACHT] == 0) {
+        for(i = 0; i < 5; i++) {
+          if (histo_dice[dice[i]] < 4) roll_die(i);
+        }
+        go_to_cpu_rolling_again();
+      } else {
+        go_to_cpu_select_scoring();
+      }
       break;
     }
   }
