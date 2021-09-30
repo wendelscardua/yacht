@@ -91,8 +91,14 @@ const unsigned char text_box_press_b_to_keep[] = {0x22,0x1a,0x03,0x2b,0x45,0x45,
 const unsigned char text_box_press_a_to_select[] = {0x21,0x1a,0x03,0x33,0x45,0x4c,0x45,0x43,0x54,0x03,0x43,0x41,0x54,0x45,0x47,0x4f,0x52,0x59,0x03,0x03,0x03,0x03};
 const unsigned char text_box_dpad_cursor[]={0x24,0x50,0x41,0x44,0x1a,0x03,0x2d,0x4f,0x56,0x45,0x03,0x43,0x55,0x52,0x53,0x4f,0x52,0x03,0x03,0x03,0x03,0x03};
 const unsigned char text_box_cpu_rolling[]={0x23,0x30,0x35,0x03,0x52,0x4f,0x4c,0x4c,0x49,0x4e,0x47,0x0e,0x0e,0x0e,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
+const unsigned char text_box_cpu_thinking[]={0x23,0x30,0x35,0x03,0x54,0x48,0x49,0x4e,0x4b,0x49,0x4e,0x47,0x0e,0x0e,0x0e,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
 
 void draw_sprites (void);
+
+void roll_die (unsigned char index) {
+  dice_roll_speed[index] = (rand8() % 16) + 45;
+  dice_roll_counter[index] = 0;
+}
 
 void go_to_player_wait_roll (void) {
   current_game_state = PlayerWaitRoll;
@@ -105,8 +111,7 @@ void go_to_player_rolling (void) {
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 24));
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
   for(i = 0; i < 5; ++i) {
-    dice_roll_speed[i] = (rand8() % 16) + 45;
-    dice_roll_counter[i] = 0;
+    roll_die(i);
   }
   stop_dice = 1;
   reroll_count = 0;
@@ -362,7 +367,28 @@ void go_to_cpu_select_scoring (void) {
 }
 
 void go_to_cpu_thinking (void) {
-  // TODO
+  current_game_state = CPUThinking;
+  multi_vram_buffer_horz(text_box_cpu_thinking, 22, NTADR_A(4, 24));
+  multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
+  temp_x = 0; temp_y = 0;
+  for(i = 0; i < 12; i++) {
+    if (cpu_score_locked[i]) continue;
+    if (cpu_score[i] >= temp_y) {
+      temp_y = cpu_score[i];
+      temp_x = i;
+    }
+  }
+  if (reroll_count == 2) {
+    ppu_wait_nmi();
+    clear_vram_buffer();
+    go_to_cpu_select_scoring(); // temp_x = target category for cpu cursor
+  } else {
+    // simple AI
+    switch(temp_x) {
+    case ONES:
+      break;
+    }
+  }
 }
 
 void main (void) {
@@ -433,8 +459,7 @@ void main (void) {
     case PlayerMayReroll:
       rolling_dice();
       if (get_pad_new(0) & PAD_A) {
-        dice_roll_speed[cursor] = (rand8() % 16) + 45;
-        dice_roll_counter[cursor] = 0;
+        roll_die(cursor);
         ++cursor;
       } else if (get_pad_new(0) & PAD_B) {
         ++cursor;
@@ -482,11 +507,7 @@ void main (void) {
       }
       if (i == 5) {
         compute_available_scores(cpu_score, cpu_score_locked);
-        if (reroll_count == 2) {
-          go_to_cpu_select_scoring();
-        } else {
-          go_to_cpu_thinking();
-        }
+        go_to_cpu_thinking();
       }
       break;
     }
