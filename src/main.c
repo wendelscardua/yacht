@@ -92,6 +92,7 @@ const unsigned char text_box_press_a_to_select[] = {0x21,0x1a,0x03,0x33,0x45,0x4
 const unsigned char text_box_dpad_cursor[]={0x24,0x50,0x41,0x44,0x1a,0x03,0x2d,0x4f,0x56,0x45,0x03,0x43,0x55,0x52,0x53,0x4f,0x52,0x03,0x03,0x03,0x03,0x03};
 const unsigned char text_box_cpu_rolling[]={0x23,0x30,0x35,0x03,0x52,0x4f,0x4c,0x4c,0x49,0x4e,0x47,0x0e,0x0e,0x0e,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
 const unsigned char text_box_cpu_thinking[]={0x23,0x30,0x35,0x03,0x54,0x48,0x49,0x4e,0x4b,0x49,0x4e,0x47,0x0e,0x0e,0x0e,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
+const unsigned char text_box_cpu_choosing[]={0x23,0x30,0x35,0x03,0x43,0x48,0x4f,0x4f,0x53,0x49,0x4e,0x47,0x0e,0x0e,0x0e,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
 
 void draw_sprites (void);
 
@@ -120,6 +121,17 @@ void go_to_player_rolling (void) {
 void go_to_player_rolling_again (void) {
   current_game_state = PlayerRolling;
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 24));
+  multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
+  stop_dice = 1;
+  cursor = 0;
+  ++reroll_count;
+}
+
+void go_to_cpu_rolling_again (void) {
+  ppu_wait_nmi();
+  clear_vram_buffer();
+  current_game_state = CPURolling;
+  multi_vram_buffer_horz(text_box_cpu_rolling, 22, NTADR_A(4, 24));
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
   stop_dice = 1;
   cursor = 0;
@@ -363,29 +375,94 @@ void go_to_player_may_reroll (void) {
 }
 
 void go_to_cpu_select_scoring (void) {
-  // TODO
+  ppu_wait_nmi();
+  clear_vram_buffer();
+  current_game_state = CPUSelectScoring;
+  cursor = 0;
+  while(cpu_score_locked[cursor]) ++cursor;
+  multi_vram_buffer_horz(text_box_cpu_choosing, 22, NTADR_A(4, 24));
+  multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
+  temp_y = 0;
 }
 
 void go_to_cpu_thinking (void) {
   current_game_state = CPUThinking;
   multi_vram_buffer_horz(text_box_cpu_thinking, 22, NTADR_A(4, 24));
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
-  temp_x = 0; temp_y = 0;
+  temp_y = 0;
+  temp_x = CHOICE;
   for(i = 0; i < 12; i++) {
-    if (cpu_score_locked[i]) continue;
+    if (cpu_score_locked[i] || i == CHOICE) continue;
     if (cpu_score[i] >= temp_y) {
       temp_y = cpu_score[i];
       temp_x = i;
     }
   }
   if (reroll_count == 2) {
-    ppu_wait_nmi();
-    clear_vram_buffer();
     go_to_cpu_select_scoring(); // temp_x = target category for cpu cursor
   } else {
     // simple AI
     switch(temp_x) {
     case ONES:
+    case TWOS:
+    case THREES:
+    case FOURS:
+    case FIVES:
+    case SIXES:
+      if (histo_dice[temp_x + 1] == 5) {
+        go_to_cpu_select_scoring();
+      } else {
+        for(i = 0; i < 5; i++) {
+          if (dice[i] != temp_x + 1) roll_die(i);
+        }
+        go_to_cpu_rolling_again();
+      }
+      break;
+    case FULL_HOUSE:
+      go_to_cpu_select_scoring();
+      break;
+    case FOUR_OF_A_KIND:
+      for(i = 1; i <= 6; i++) {
+        if (histo_dice[i] >= 4) break;
+      }
+      if (i == 7) {
+        for(i = 0; i < 5; ++i) roll_die(i);
+        go_to_cpu_rolling_again();
+      } else if (histo_dice[i] == 5) {
+        go_to_cpu_select_scoring();
+      } else {
+        temp = i;
+        for(i = 0; i < 5; ++i) {
+          if (dice[i] != temp) roll_die(i);
+        }
+        go_to_cpu_rolling_again();
+      }
+      break;
+    case LITTLE_STRAIGHT:
+    case BIG_STRAIGHT:
+      if (cpu_score[temp_x]) {
+        go_to_cpu_select_scoring();
+      } else {
+        for(i = 0; i < 5; ++i) roll_die(i);
+        go_to_cpu_rolling_again();
+      }
+      break;
+    case CHOICE:
+      temp = 0;
+      for(i = 0; i < 5; ++i) {
+        if (dice[i] <= 3) {
+          roll_die(i);
+          ++temp;
+        }
+      }
+      if (temp) {
+        go_to_cpu_rolling_again();
+      } else {
+        go_to_cpu_select_scoring();
+      }
+      break;
+    case YACHT:
+      go_to_cpu_select_scoring();
       break;
     }
   }
@@ -510,6 +587,29 @@ void main (void) {
         go_to_cpu_thinking();
       }
       break;
+    case CPUSelectScoring:
+      ++temp_y;
+      if (temp_y > 30) {
+        temp_y = 0;
+        if (cursor == temp_x) {
+          cpu_score_locked[cursor] = 1;
+          cpu_points += cpu_score[cursor];
+          display_score(cpu_points, NTADR_A(25, 16));
+          one_vram_buffer(0x91, NTADR_A(28, 3 + cursor));
+          for(i = 0; i < 12; i++) {
+            if (!cpu_score_locked[i]) {
+              multi_vram_buffer_horz(text_box_empty, 3, NTADR_A(25, 3 + i));
+            }
+          }
+          ppu_wait_nmi();
+          clear_vram_buffer();
+          go_to_player_wait_roll(); // TODO: check game over
+        } else {
+          do {
+            cursor = (cursor + 1) % 12;
+          } while(cpu_score_locked[cursor]);
+        }
+      }
     }
 
     // load the irq array with values it parse
@@ -544,5 +644,7 @@ void draw_sprites (void) {
     oam_spr(0x24 + 0x20 * cursor, 0xb6, 0x90, 0x1);
   } else if (current_game_state == PlayerSelectScoring) {
     oam_spr(0xb8, 0x17 + 0x8 * cursor, 0x92, 0x3);
+  } else if (current_game_state == CPUSelectScoring) {
+    oam_spr(0xe0, 0x17 + 0x8 * cursor, 0x92, 0x3);
   }
 }
