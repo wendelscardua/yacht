@@ -114,11 +114,13 @@ void go_to_player_rolling_again (void) {
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 24));
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
   stop_dice = 1;
+  reroll_cursor = 0;
   ++reroll_count;
 }
 
 void go_to_player_select_scoring (void) {
   // TODO
+  current_game_state = PlayerSelectScoring;
 }
 
 void start_game (void) {
