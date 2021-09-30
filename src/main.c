@@ -393,7 +393,7 @@ void go_to_cpu_thinking (void) {
   current_game_state = CPUThinking;
   multi_vram_buffer_horz(text_box_cpu_thinking, 22, NTADR_A(4, 24));
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
-  temp_int = 180 + (rand8() & 127);
+  temp_int = 120 + (rand8() & 127) - (reroll_count * 32);
 }
 
 void go_to_game_end (void) {
@@ -615,7 +615,7 @@ void main (void) {
       break;
     case CPUSelectScoring:
       ++temp_y;
-      if (temp_y > 30) {
+      if (temp_y > 30 || (temp_y > 15 && temp_x - cursor > 4)) {
         temp_y = 0;
         if (cursor == temp_x) {
           cpu_score_locked[cursor] = 1;
