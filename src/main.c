@@ -62,6 +62,8 @@ unsigned char cpu_score_locked[12];
 unsigned int player_points;
 unsigned int cpu_points;
 
+unsigned char reroll_cursor, reroll_count;
+
 #pragma bss-name(pop)
 // should be in the regular 0x300 ram now
 
@@ -82,10 +84,12 @@ unsigned char wram_array[0x2000];
 const unsigned char palette_bg[16]={ 0x1a,0x1a,0x29,0x3a,0x1a,0x30,0x00,0x0f,0x1a,0x07,0x28,0x0f,0x1a,0x09,0x19,0x29 };
 const unsigned char palette_spr[16]={ 0x1a,0x1a,0x29,0x3a,0x1a,0x30,0x00,0x0f,0x1a,0x07,0x28,0x0f,0x1a,0x09,0x19,0x29 };
 
-void draw_sprites (void);
-
 const unsigned char text_box_empty[] = {0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
 const unsigned char text_box_press_a_to_roll[] = {0x21,0x1a,0x03,0x32,0x4f,0x4c,0x4c,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
+const unsigned char text_box_press_a_to_reroll[] = {0x21,0x1a,0x03,0x32,0x45,0x52,0x4f,0x4c,0x4c,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
+const unsigned char text_box_press_b_to_keep[] = {0x22,0x1a,0x03,0x2b,0x45,0x45,0x50,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
+
+void draw_sprites (void);
 
 void go_to_player_wait_roll (void) {
   current_game_state = PlayerWaitRoll;
@@ -102,6 +106,19 @@ void go_to_player_rolling (void) {
     dice_roll_counter[i] = 0;
   }
   stop_dice = 1;
+  reroll_count = 0;
+}
+
+void go_to_player_rolling_again (void) {
+  current_game_state = PlayerRolling;
+  multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 24));
+  multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
+  stop_dice = 1;
+  ++reroll_count;
+}
+
+void go_to_player_select_scoring (void) {
+  // TODO
 }
 
 void start_game (void) {
@@ -109,7 +126,7 @@ void start_game (void) {
   pal_bg(palette_bg); //	load the BG palette
   pal_spr(palette_spr); // load the sprite palette
 
-                        // draw some things
+  // draw some things
   vram_adr(NTADR_A(0,0));
   unrle(main_nametable);
 
@@ -307,7 +324,11 @@ void compute_available_scores (unsigned char *score, unsigned char *score_locked
 }
 
 void go_to_player_may_reroll (void) {
-  // TODO
+  current_game_state = PlayerMayReroll;
+  stop_dice = 0;
+  reroll_cursor = 0;
+  multi_vram_buffer_horz(text_box_press_a_to_reroll, 22, NTADR_A(4, 24));
+  multi_vram_buffer_horz(text_box_press_b_to_keep, 22, NTADR_A(4, 25));
 }
 
 void main (void) {
@@ -368,10 +389,33 @@ void main (void) {
       }
       if (i == 5) {
         compute_available_scores(player_score, player_score_locked);
-        go_to_player_may_reroll();
+        if (reroll_count == 2) {
+          go_to_player_select_scoring();
+        } else {
+          go_to_player_may_reroll();
+        }
       }
       break;
     case PlayerMayReroll:
+      rolling_dice();
+      if (get_pad_new(0) & PAD_A) {
+        dice_roll_speed[reroll_cursor] = (rand8() % 16) + 45;
+        dice_roll_counter[reroll_cursor] = 0;
+        ++reroll_cursor;
+      } else if (get_pad_new(0) & PAD_B) {
+        ++reroll_cursor;
+      }
+      if (reroll_cursor == 5) {
+        for(i = 0; i < 5; ++i) {
+          if (dice_roll_speed[i]) break;
+        }
+        if (i == 5) {
+          go_to_player_select_scoring();
+        } else {
+          go_to_player_rolling_again();
+        }
+      }
+
       break;
     }
 
@@ -402,4 +446,8 @@ void main (void) {
 
 void draw_sprites (void) {
   oam_clear();
+
+  if (current_game_state == PlayerMayReroll) {
+    oam_spr(0x24 + 0x20 * reroll_cursor, 0xb6, 0x90, 0x1);
+  }
 }
