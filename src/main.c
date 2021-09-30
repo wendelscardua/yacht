@@ -40,6 +40,7 @@ unsigned char dice_roll_speed[5];
 unsigned char dice_roll_counter[5];
 unsigned char stop_dice;
 unsigned char histo_dice[7];
+unsigned char straight_count, straight_missing;
 
 #define ONES 0
 #define TWOS 1
@@ -176,7 +177,31 @@ void go_to_title (void) {
 }
 
 void display_score (unsigned int score, unsigned int address) {
-  // TODO
+  unsigned char buffer[3];
+  ppu_wait_nmi();
+  clear_vram_buffer();
+  temp_int = score;
+  buffer[2] = 0x10;
+  if (score >= 100) {
+    buffer[0] = 0x10;
+  } else {
+    buffer[0] = 0x03;
+  }
+  if (score >= 10) {
+    buffer[1] = 0x10;
+  } else {
+    buffer[1] = 0x03;
+  }
+  while(temp_int >= 100) {
+    ++buffer[0];
+    temp_int -= 100;
+  }
+  while(temp_int >= 10) {
+    ++buffer[1];
+    temp_int -= 10;
+  }
+  buffer[2] += temp_int;
+  multi_vram_buffer_horz(buffer, 3, address);
 }
 
 void compute_available_scores (unsigned char *score, unsigned char *score_locked) {
@@ -190,30 +215,95 @@ void compute_available_scores (unsigned char *score, unsigned char *score_locked
 
   if (!score_locked[ONES]) {
     score[ONES] = histo_dice[1];
-    display_score(score[ONES], NTADR_A(20, 3));
+    display_score(score[ONES], NTADR_A(20, ONES + 3));
   }
   if (!score_locked[TWOS]) {
     score[TWOS] = 2 * histo_dice[2];
-    display_score(score[TWOS], NTADR_A(20, 4));
+    display_score(score[TWOS], NTADR_A(20, TWOS + 3));
   }
   if (!score_locked[THREES]) {
     score[THREES] = 3 * histo_dice[3];
-    display_score(score[THREES], NTADR_A(20, 5));
+    display_score(score[THREES], NTADR_A(20, THREES + 3));
   }
   if (!score_locked[FOURS]) {
     score[FOURS] = 4 * histo_dice[4];
-    display_score(score[FOURS], NTADR_A(20, 6));
+    display_score(score[FOURS], NTADR_A(20, FOURS + 3));
   }
   if (!score_locked[FIVES]) {
     score[FIVES] = 5 * histo_dice[5];
-    display_score(score[FIVES], NTADR_A(20, 7));
+    display_score(score[FIVES], NTADR_A(20, FIVES + 3));
   }
   if (!score_locked[SIXES]) {
     score[SIXES] = 6 * histo_dice[6];
-    display_score(score[SIXES], NTADR_A(20, 8));
+    display_score(score[SIXES], NTADR_A(20, SIXES + 3));
   }
 
-  // TODO continue
+  if (!score_locked[FULL_HOUSE]) {
+    score[FULL_HOUSE] = 0;
+    if ((histo_dice[1] == 3 || histo_dice[2] == 3 || histo_dice[3] == 3 || histo_dice[4] == 3 || histo_dice[5] == 3 || histo_dice[6] == 3) &&
+        (histo_dice[1] == 2 || histo_dice[2] == 2 || histo_dice[3] == 2 || histo_dice[4] == 2 || histo_dice[5] == 2 || histo_dice[6] == 2)) {
+      score[FULL_HOUSE] = dice[0] + dice[1] + dice[2] + dice[3] + dice[4];
+    }
+    display_score(score[FULL_HOUSE], NTADR_A(20, FULL_HOUSE + 3));
+  }
+
+  if (!score_locked[FOUR_OF_A_KIND]) {
+    score[FOUR_OF_A_KIND] = 0;
+    for(i = 1; i <= 6; ++i) {
+      if (histo_dice[i] >= 4) {
+        score[FOUR_OF_A_KIND] = i * 4;
+        break;
+      }
+    }
+    display_score(score[FOUR_OF_A_KIND], NTADR_A(20, FOUR_OF_A_KIND + 3));
+  }
+
+  straight_count = straight_missing = 0;
+
+  for(i = 1; i <= 6; ++i) {
+    if (histo_dice[i] == 0) {
+      ++straight_count;
+      if (straight_count == 2) break;
+      straight_missing = i;
+    }
+  }
+
+  if (!score_locked[LITTLE_STRAIGHT]) {
+    if (straight_count == 1 && straight_missing == 6) {
+      score[LITTLE_STRAIGHT] = 30;
+    } else {
+      score[LITTLE_STRAIGHT] = 0;
+    }
+    display_score(score[LITTLE_STRAIGHT], NTADR_A(20, LITTLE_STRAIGHT + 3));
+  }
+
+  if (!score_locked[BIG_STRAIGHT]) {
+    if (straight_count == 1 && straight_missing == 1) {
+      score[BIG_STRAIGHT] = 30;
+    } else {
+      score[BIG_STRAIGHT] = 0;
+    }
+    display_score(score[BIG_STRAIGHT], NTADR_A(20, BIG_STRAIGHT + 3));
+  }
+
+  if (!score_locked[CHOICE]) {
+    score[CHOICE] = 0;
+    for(i = 0; i < 5; ++i) {
+      score[CHOICE] += dice[i];
+    }
+    display_score(score[CHOICE], NTADR_A(20, CHOICE + 3));
+  }
+
+  if (!score_locked[YACHT]) {
+    score[YACHT] = 0;
+    for(i = 1; i <= 6; ++i) {
+      if (histo_dice[i] == 5) {
+        score[YACHT] = 50;
+        break;
+      }
+    }
+    display_score(score[YACHT], NTADR_A(20, YACHT + 3));
+  }
 }
 
 void go_to_player_may_reroll (void) {
