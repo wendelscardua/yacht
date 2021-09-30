@@ -62,7 +62,7 @@ unsigned char cpu_score_locked[12];
 unsigned int player_points;
 unsigned int cpu_points;
 
-unsigned char reroll_cursor, reroll_count;
+unsigned char cursor, reroll_count;
 
 #pragma bss-name(pop)
 // should be in the regular 0x300 ram now
@@ -88,6 +88,9 @@ const unsigned char text_box_empty[] = {0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,
 const unsigned char text_box_press_a_to_roll[] = {0x21,0x1a,0x03,0x32,0x4f,0x4c,0x4c,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
 const unsigned char text_box_press_a_to_reroll[] = {0x21,0x1a,0x03,0x32,0x45,0x52,0x4f,0x4c,0x4c,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
 const unsigned char text_box_press_b_to_keep[] = {0x22,0x1a,0x03,0x2b,0x45,0x45,0x50,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
+const unsigned char text_box_press_a_to_select[] = {0x21,0x1a,0x03,0x33,0x45,0x4c,0x45,0x43,0x54,0x03,0x43,0x41,0x54,0x45,0x47,0x4f,0x52,0x59,0x03,0x03,0x03,0x03};
+const unsigned char text_box_dpad_cursor[]={0x24,0x50,0x41,0x44,0x1a,0x03,0x2d,0x4f,0x56,0x45,0x03,0x43,0x55,0x52,0x53,0x4f,0x52,0x03,0x03,0x03,0x03,0x03};
+const unsigned char text_box_cpu_rolling[]={0x23,0x30,0x35,0x03,0x52,0x4f,0x4c,0x4c,0x49,0x4e,0x47,0x0e,0x0e,0x0e,0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03};
 
 void draw_sprites (void);
 
@@ -114,13 +117,28 @@ void go_to_player_rolling_again (void) {
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 24));
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
   stop_dice = 1;
-  reroll_cursor = 0;
+  cursor = 0;
   ++reroll_count;
 }
 
 void go_to_player_select_scoring (void) {
-  // TODO
   current_game_state = PlayerSelectScoring;
+  multi_vram_buffer_horz(text_box_press_a_to_select, 22, NTADR_A(4, 24));
+  multi_vram_buffer_horz(text_box_dpad_cursor, 22, NTADR_A(4, 25));
+  cursor = 0;
+  while(player_score_locked[cursor]) ++cursor;
+}
+
+void go_to_cpu_rolling (void) {
+  current_game_state = CPURolling;
+  multi_vram_buffer_horz(text_box_cpu_rolling, 22, NTADR_A(4, 24));
+  multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
+  for(i = 0; i < 5; ++i) {
+    dice_roll_speed[i] = (rand8() % 16) + 45;
+    dice_roll_counter[i] = 0;
+  }
+  stop_dice = 1;
+  reroll_count = 0;
 }
 
 void start_game (void) {
@@ -232,29 +250,35 @@ void compute_available_scores (unsigned char *score, unsigned char *score_locked
     ++histo_dice[dice[i]];
   }
 
+  if (score == player_score) {
+    temp_x = 20;
+  } else {
+    temp_x = 25;
+  }
+
   if (!score_locked[ONES]) {
     score[ONES] = histo_dice[1];
-    display_score(score[ONES], NTADR_A(20, ONES + 3));
+    display_score(score[ONES], NTADR_A(temp_x, ONES + 3));
   }
   if (!score_locked[TWOS]) {
     score[TWOS] = 2 * histo_dice[2];
-    display_score(score[TWOS], NTADR_A(20, TWOS + 3));
+    display_score(score[TWOS], NTADR_A(temp_x, TWOS + 3));
   }
   if (!score_locked[THREES]) {
     score[THREES] = 3 * histo_dice[3];
-    display_score(score[THREES], NTADR_A(20, THREES + 3));
+    display_score(score[THREES], NTADR_A(temp_x, THREES + 3));
   }
   if (!score_locked[FOURS]) {
     score[FOURS] = 4 * histo_dice[4];
-    display_score(score[FOURS], NTADR_A(20, FOURS + 3));
+    display_score(score[FOURS], NTADR_A(temp_x, FOURS + 3));
   }
   if (!score_locked[FIVES]) {
     score[FIVES] = 5 * histo_dice[5];
-    display_score(score[FIVES], NTADR_A(20, FIVES + 3));
+    display_score(score[FIVES], NTADR_A(temp_x, FIVES + 3));
   }
   if (!score_locked[SIXES]) {
     score[SIXES] = 6 * histo_dice[6];
-    display_score(score[SIXES], NTADR_A(20, SIXES + 3));
+    display_score(score[SIXES], NTADR_A(temp_x, SIXES + 3));
   }
 
   if (!score_locked[FULL_HOUSE]) {
@@ -263,7 +287,7 @@ void compute_available_scores (unsigned char *score, unsigned char *score_locked
         (histo_dice[1] == 2 || histo_dice[2] == 2 || histo_dice[3] == 2 || histo_dice[4] == 2 || histo_dice[5] == 2 || histo_dice[6] == 2)) {
       score[FULL_HOUSE] = dice[0] + dice[1] + dice[2] + dice[3] + dice[4];
     }
-    display_score(score[FULL_HOUSE], NTADR_A(20, FULL_HOUSE + 3));
+    display_score(score[FULL_HOUSE], NTADR_A(temp_x, FULL_HOUSE + 3));
   }
 
   if (!score_locked[FOUR_OF_A_KIND]) {
@@ -274,7 +298,7 @@ void compute_available_scores (unsigned char *score, unsigned char *score_locked
         break;
       }
     }
-    display_score(score[FOUR_OF_A_KIND], NTADR_A(20, FOUR_OF_A_KIND + 3));
+    display_score(score[FOUR_OF_A_KIND], NTADR_A(temp_x, FOUR_OF_A_KIND + 3));
   }
 
   straight_count = straight_missing = 0;
@@ -293,7 +317,7 @@ void compute_available_scores (unsigned char *score, unsigned char *score_locked
     } else {
       score[LITTLE_STRAIGHT] = 0;
     }
-    display_score(score[LITTLE_STRAIGHT], NTADR_A(20, LITTLE_STRAIGHT + 3));
+    display_score(score[LITTLE_STRAIGHT], NTADR_A(temp_x, LITTLE_STRAIGHT + 3));
   }
 
   if (!score_locked[BIG_STRAIGHT]) {
@@ -302,7 +326,7 @@ void compute_available_scores (unsigned char *score, unsigned char *score_locked
     } else {
       score[BIG_STRAIGHT] = 0;
     }
-    display_score(score[BIG_STRAIGHT], NTADR_A(20, BIG_STRAIGHT + 3));
+    display_score(score[BIG_STRAIGHT], NTADR_A(temp_x, BIG_STRAIGHT + 3));
   }
 
   if (!score_locked[CHOICE]) {
@@ -310,7 +334,7 @@ void compute_available_scores (unsigned char *score, unsigned char *score_locked
     for(i = 0; i < 5; ++i) {
       score[CHOICE] += dice[i];
     }
-    display_score(score[CHOICE], NTADR_A(20, CHOICE + 3));
+    display_score(score[CHOICE], NTADR_A(temp_x, CHOICE + 3));
   }
 
   if (!score_locked[YACHT]) {
@@ -321,16 +345,24 @@ void compute_available_scores (unsigned char *score, unsigned char *score_locked
         break;
       }
     }
-    display_score(score[YACHT], NTADR_A(20, YACHT + 3));
+    display_score(score[YACHT], NTADR_A(temp_x, YACHT + 3));
   }
 }
 
 void go_to_player_may_reroll (void) {
   current_game_state = PlayerMayReroll;
   stop_dice = 0;
-  reroll_cursor = 0;
+  cursor = 0;
   multi_vram_buffer_horz(text_box_press_a_to_reroll, 22, NTADR_A(4, 24));
   multi_vram_buffer_horz(text_box_press_b_to_keep, 22, NTADR_A(4, 25));
+}
+
+void go_to_cpu_select_scoring (void) {
+  // TODO
+}
+
+void go_to_cpu_thinking (void) {
+  // TODO
 }
 
 void main (void) {
@@ -401,13 +433,13 @@ void main (void) {
     case PlayerMayReroll:
       rolling_dice();
       if (get_pad_new(0) & PAD_A) {
-        dice_roll_speed[reroll_cursor] = (rand8() % 16) + 45;
-        dice_roll_counter[reroll_cursor] = 0;
-        ++reroll_cursor;
+        dice_roll_speed[cursor] = (rand8() % 16) + 45;
+        dice_roll_counter[cursor] = 0;
+        ++cursor;
       } else if (get_pad_new(0) & PAD_B) {
-        ++reroll_cursor;
+        ++cursor;
       }
-      if (reroll_cursor == 5) {
+      if (cursor == 5) {
         for(i = 0; i < 5; ++i) {
           if (dice_roll_speed[i]) break;
         }
@@ -418,6 +450,44 @@ void main (void) {
         }
       }
 
+      break;
+    case PlayerSelectScoring:
+      if (get_pad_new(0) & PAD_UP) {
+        do {
+          cursor = (cursor + 11) % 12;
+        } while(player_score_locked[cursor]);
+      } else if (get_pad_new(0) & PAD_DOWN) {
+        do {
+          cursor = (cursor + 1) % 12;
+        } while(player_score_locked[cursor]);
+      } else if (get_pad_new(0) & PAD_A) {
+        player_score_locked[cursor] = 1;
+        player_points += player_score[cursor];
+        display_score(player_points, NTADR_A(20, 16));
+        one_vram_buffer(0x91, NTADR_A(23, 3 + cursor));
+        for(i = 0; i < 12; i++) {
+          if (!player_score_locked[i]) {
+            multi_vram_buffer_horz(text_box_empty, 3, NTADR_A(20, 3 + i));
+          }
+        }
+        ppu_wait_nmi();
+        clear_vram_buffer();
+        go_to_cpu_rolling();
+      }
+      break;
+    case CPURolling:
+      rolling_dice();
+      for(i = 0; i < 5; ++i) {
+        if (dice_roll_speed[i]) break;
+      }
+      if (i == 5) {
+        compute_available_scores(cpu_score, cpu_score_locked);
+        if (reroll_count == 2) {
+          go_to_cpu_select_scoring();
+        } else {
+          go_to_cpu_thinking();
+        }
+      }
       break;
     }
 
@@ -450,6 +520,8 @@ void draw_sprites (void) {
   oam_clear();
 
   if (current_game_state == PlayerMayReroll) {
-    oam_spr(0x24 + 0x20 * reroll_cursor, 0xb6, 0x90, 0x1);
+    oam_spr(0x24 + 0x20 * cursor, 0xb6, 0x90, 0x1);
+  } else if (current_game_state == PlayerSelectScoring) {
+    oam_spr(0xb8, 0x17 + 0x8 * cursor, 0x92, 0x3);
   }
 }
