@@ -393,6 +393,22 @@ void go_to_cpu_thinking (void) {
   current_game_state = CPUThinking;
   multi_vram_buffer_horz(text_box_cpu_thinking, 22, NTADR_A(4, 24));
   multi_vram_buffer_horz(text_box_empty, 22, NTADR_A(4, 25));
+  temp_int = 180 + (rand8() & 127);
+}
+
+void go_to_game_end (void) {
+  current_game_state = GameEnd;
+  if (player_points > cpu_points) {
+    multi_vram_buffer_horz(text_box_player_wins, 22, NTADR_A(4, 24));
+  } else if (player_points < cpu_points) {
+    multi_vram_buffer_horz(text_box_cpu_wins, 22, NTADR_A(4, 24));
+  } else {
+    multi_vram_buffer_horz(text_box_draw, 22, NTADR_A(4, 24));
+  }
+  multi_vram_buffer_horz(text_box_press_start, 22, NTADR_A(4, 25));
+}
+
+void cpu_ai (void) {
   temp_y = 0;
   temp_x = CHOICE;
   for(i = 0; i < 12; i++) {
@@ -470,18 +486,6 @@ void go_to_cpu_thinking (void) {
       break;
     }
   }
-}
-
-void go_to_game_end (void) {
-  current_game_state = GameEnd;
-  if (player_points > cpu_points) {
-    multi_vram_buffer_horz(text_box_player_wins, 22, NTADR_A(4, 24));
-  } else if (player_points < cpu_points) {
-    multi_vram_buffer_horz(text_box_cpu_wins, 22, NTADR_A(4, 24));
-  } else {
-    multi_vram_buffer_horz(text_box_draw, 22, NTADR_A(4, 24));
-  }
-  multi_vram_buffer_horz(text_box_press_start, 22, NTADR_A(4, 25));
 }
 
 void main (void) {
@@ -603,6 +607,12 @@ void main (void) {
         go_to_cpu_thinking();
       }
       break;
+    case CPUThinking:
+      --temp_int;
+      if (temp_int == 0) {
+        cpu_ai();
+      }
+      break;
     case CPUSelectScoring:
       ++temp_y;
       if (temp_y > 30) {
@@ -631,6 +641,12 @@ void main (void) {
           } while(cpu_score_locked[cursor]);
         }
       }
+      break;
+    case GameEnd:
+      if (get_pad_new(0) & PAD_START) {
+        go_to_title();
+      }
+      break;
     }
 
     // load the irq array with values it parse
