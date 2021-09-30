@@ -164,15 +164,19 @@ void go_to_cpu_rolling (void) {
 }
 
 void start_game (void) {
+  if (unseeded) {
+    seed_rng();
+    unseeded = 0;
+  }
+
+  pal_fade_to(4, 0);
   ppu_off(); // screen off
-  pal_bg(palette_bg); //	load the BG palette
+  pal_bg(palette_bg); // load the BG palette
   pal_spr(palette_spr); // load the sprite palette
 
   // draw some things
   vram_adr(NTADR_A(0,0));
   unrle(main_nametable);
-
-  ppu_on_all();
 
   memfill(wram_array,0,0x2000);
 
@@ -189,6 +193,10 @@ void start_game (void) {
   }
 
   player_points = cpu_points = turns = 0;
+
+  ppu_on_all();
+
+  pal_fade_to(0, 4);
 
   go_to_player_wait_roll();
 }
@@ -236,14 +244,18 @@ void rolling_dice (void) {
 }
 
 void go_to_title (void) {
+  pal_fade_to(4, 0);
   ppu_off(); // screen off
   // draw some things
   vram_adr(NTADR_A(0,0));
   unrle(title_nametable);
   music_play(0);
+
   draw_sprites();
   ppu_on_all(); //	turn on screen
+  pal_fade_to(0, 4);
   current_game_state = Title;
+  cursor = 0;
 }
 
 void display_score (unsigned int score, unsigned int address) {
@@ -552,12 +564,17 @@ void main (void) {
 
     switch (current_game_state) {
     case Title:
-      if (get_pad_new(0) & PAD_START) {
-        if (unseeded) {
-          seed_rng();
-          unseeded = 0;
+      ++temp;
+      if (get_pad_new(0) & (PAD_START | PAD_A)) {
+        switch(cursor) {
+        case 0:
+          start_game();
+          break;
         }
-        start_game();
+      } else if (get_pad_new(0) & (PAD_UP | PAD_LEFT)) {
+        cursor = (cursor + 2) % 3;
+      } else if (get_pad_new(0) & (PAD_DOWN | PAD_RIGHT | PAD_SELECT)) {
+        cursor = (cursor + 1) % 3;
       }
       break;
     case PlayerWaitRoll:
@@ -703,11 +720,18 @@ void main (void) {
 void draw_sprites (void) {
   oam_clear();
 
-  if (current_game_state == PlayerMayReroll) {
+  switch(current_game_state) {
+  case Title:
+    if (temp & 48) oam_spr(0x30 + 0x38 * cursor, 0xc7, 0x92, 0x3 | OAM_FLIP_H);
+    break;
+  case PlayerMayReroll:
     oam_spr(0x24 + 0x20 * cursor, 0xb6, 0x90, 0x1);
-  } else if (current_game_state == PlayerSelectScoring) {
+    break;
+  case PlayerSelectScoring:
     oam_spr(0xb8, 0x17 + 0x8 * cursor, 0x92, 0x3);
-  } else if (current_game_state == CPUSelectScoring) {
+    break;
+  case CPUSelectScoring:
     oam_spr(0xe0, 0x17 + 0x8 * cursor, 0x92, 0x3);
+    break;
   }
 }
