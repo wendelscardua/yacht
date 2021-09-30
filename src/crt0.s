@@ -10,13 +10,13 @@
 
 
 FT_BASE_ADR		= $0100		;page in RAM, should be $xx00
-FT_DPCM_OFF		= $f000		;$c000..$ffc0, 64-byte steps
+FT_DPCM_OFF		= $d000		;$c000..$ffc0, 64-byte steps
 FT_SFX_STREAMS	= 1			;number of sound effects played at once, 1..4
 
 FT_THREAD       = 1		;undefine if you call sound effects in the same thread as sound update
 FT_PAL_SUPPORT	= 1		;undefine to exclude PAL support
 FT_NTSC_SUPPORT	= 1		;undefine to exclude NTSC support
-FT_DPCM_ENABLE  = 0		;undefine to exclude all DMC code
+FT_DPCM_ENABLE  = 1		;undefine to exclude all DMC code
 FT_SFX_ENABLE   = 1		;undefine to exclude all sound effects code
 
 
@@ -124,19 +124,6 @@ DATA_PTR:			.res 2
 ; linker complains if I don't have at least one mention of each bank
 .segment "ONCE"
 .segment "BANK0"
-.segment "BANK1"
-.segment "BANK2"
-.segment "BANK3"
-.segment "BANK4"
-.segment "BANK5"
-.segment "BANK6"
-.segment "BANK7"
-.segment "BANK8"
-.segment "BANK9"
-.segment "BANK10"
-.segment "BANK11"
-.segment "BANK12"
-
 
 .segment "STARTUP"
 ; this should be mapped to the last PRG bank
@@ -379,10 +366,8 @@ sounds_data:
 
 
 
-;.segment "SAMPLES"
-;	.incbin "MUSIC/BassDrum.dmc"
-
-
+.segment "SAMPLES"
+.incbin "music/soundtrack.dmc"
 
 .segment "VECTORS"
 
