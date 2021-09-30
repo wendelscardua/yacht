@@ -7,34 +7,93 @@ soundtrack_music_data:
 	.word @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4,307,256 ; fEelings
 
 @instruments:
-	.byte $b0 ;instrument $00
-	.word @env1,@env0,@env0
-	.byte $00
-	.byte $b0 ;instrument $01
-	.word @env2,@env0,@env0
-	.byte $00
-	.byte $b0 ;instrument $02
+	.byte $30 ;instrument $00
 	.word @env3,@env0,@env0
 	.byte $00
-	.byte $b0 ;instrument $03
-	.word @env4,@env0,@env0
+	.byte $b0 ;instrument $01
+	.word @env1,@env0,@env0
+	.byte $00
+	.byte $b0 ;instrument $02
+	.word @env2,@env0,@env0
 	.byte $00
 	.byte $30 ;instrument $04
-	.word @env2,@env5,@env0
+	.word @env1,@env4,@env0
 	.byte $00
 
 @samples:
+	.byte $00+.lobyte(FT_DPCM_PTR),$a8,$0f	;1
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;2
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;3
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;4
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;5
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;6
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;7
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;8
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;9
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;10
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;11
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;12
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;13
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;14
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;15
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;16
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;17
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;18
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;19
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;20
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;21
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;22
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;23
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;24
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;25
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;26
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;27
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;28
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;29
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;30
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;31
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;32
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;33
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;34
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;35
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;36
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;37
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;38
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;39
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;40
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;41
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;42
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;43
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;44
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;45
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;46
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;47
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;48
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;49
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;50
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;51
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;52
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;53
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;54
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;55
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;56
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;57
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;58
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;59
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;60
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;61
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;62
+	.byte $00+.lobyte(FT_DPCM_PTR),$00,$00	;63
+
 @env0:
 	.byte $c0,$00,$00
 @env1:
-	.byte $c6,$cf,$cc,$c9,$c7,$c6,$c5,$c4,$c2,$00,$08
-@env2:
 	.byte $c3,$c7,$c5,$c4,$c3,$c2,$c1,$c1,$c0,$00,$08
-@env3:
+@env2:
 	.byte $c4,$c3,$c2,$c1,$c0,$00,$04
+@env3:
+	.byte $cf,$05,$cf,$00,$02
 @env4:
-	.byte $c2,$06,$c1,$00,$02
-@env5:
 	.byte $c0,$c0,$bf,$bd,$00,$03
 
 
@@ -69,7 +128,7 @@ soundtrack_music_data:
 @song0ch3:
 @song0ch3loop:
 @ref3:
-	.byte $88,$20,$8d,$20,$8d,$20,$8d,$20,$8d,$20,$8d,$20,$8d,$20,$8d,$20
+	.byte $86,$20,$8d,$20,$8d,$20,$8d,$20,$8d,$20,$8d,$20,$8d,$20,$8d,$20
 	.byte $8d
 	.byte $fd
 	.word @song0ch3loop

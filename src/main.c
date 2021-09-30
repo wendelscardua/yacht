@@ -41,6 +41,7 @@ unsigned char dice_roll_counter[5];
 unsigned char stop_dice;
 unsigned char histo_dice[7];
 unsigned char straight_count, straight_missing;
+unsigned char dice_sfx_counter;
 
 #define ONES 0
 #define TWOS 1
@@ -180,6 +181,8 @@ void start_game (void) {
     dice_roll_speed[i] = 0;
   }
 
+  dice_sfx_counter = 0;
+
   for(i = 0; i < 12; ++i) {
     player_score[i] = player_score_locked[i] =
       cpu_score[i] = cpu_score_locked[i] = 0;
@@ -203,6 +206,7 @@ void render_die (unsigned char index) {
 }
 
 void rolling_dice (void) {
+  unsigned char changed = 0;
   for(i = 0; i < 5; ++i) {
     if (dice_roll_speed[i]) {
       dice_roll_counter[i] += (dice_roll_speed[i] + 1) / 2;
@@ -214,11 +218,19 @@ void rolling_dice (void) {
         } while (!dice[i] || dice[i] == 7);
 
         render_die(i);
+        changed = 1;
 
         if (stop_dice) {
           --dice_roll_speed[i];
         }
       }
+    }
+  }
+  if (dice_sfx_counter > 0) --dice_sfx_counter;
+  if (changed) {
+    if (dice_sfx_counter == 0) {
+      sample_play(1);
+      dice_sfx_counter = 15;
     }
   }
 }
