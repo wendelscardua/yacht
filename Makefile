@@ -2,8 +2,8 @@ PROJECT=yacht
 LD65_FLAGS=
 CA65_FLAGS=
 EMULATOR=/mnt/c/NESDev/Mesen.exe
-NSF2DATA=/mnt/c/NESDev/famitone2d/NSF/nsf2data.exe
-TEXT2DATA=/mnt/c/NESDev/famitone2d/text2data.exe
+NSF2DATA=/mnt/c/NESDev/famitone5.0/nsf2data/nsf2data5.exe
+TEXT2DATA=/mnt/c/NESDev/famitone5.0/text2data/text2vol5.exe
 FAMITRACKER=/mnt/c/NESDev/famitracker/FamiTracker.exe
 VERSION := $(shell git describe --exact-match --tags 2> /dev/null || git rev-parse --short HEAD)
 

@@ -349,7 +349,7 @@ jmp _main			;no parameters
 
 
 .segment "CODE"
-.include "music/famitone2.s"
+.include "music/famitone5.s"
 ; When music files get very big, it's probably best to
 ; split the songs into multiple swapped banks
 ; the music code itself is in the regular CODE banks.
