@@ -792,7 +792,7 @@ void draw_sprites (void) {
 
   switch(current_game_state) {
   case Title:
-    if (temp & 48) oam_spr(0x30 + 0x38 * cursor, 0xc7, 0x92, 0x3 | OAM_FLIP_H);
+    if (temp & 48) oam_spr(0x28 + 0x38 * cursor, 0xc7, 0x92, 0x3 | OAM_FLIP_H);
     break;
   case PlayerMayReroll:
     oam_spr(0x24 + 0x20 * cursor, 0xb6, 0x90, 0x1);
