@@ -25,6 +25,7 @@ unsigned int temp_int;
 
 enum game_state {
                  Title,
+                 Help,
                  PlayerWaitRoll,
                  PlayerRolling,
                  PlayerMayReroll,
@@ -256,6 +257,22 @@ void go_to_title (void) {
   pal_fade_to(0, 4);
   current_game_state = Title;
   cursor = 0;
+}
+
+void go_to_help (void) {
+  pal_fade_to(4, 0);
+  ppu_off(); // screen off
+  // draw some things
+  vram_adr(NTADR_A(0,0));
+  if (cursor == 0) {
+    unrle(help1_nametable);
+  } else {
+    unrle(help2_nametable);
+  }
+
+  ppu_on_all(); //	turn on screen
+  pal_fade_to(0, 4);
+  current_game_state = Help;
 }
 
 void display_score (unsigned int score, unsigned int address) {
@@ -570,11 +587,32 @@ void main (void) {
         case 0:
           start_game();
           break;
+        case 1:
+          cursor = 0;
+          go_to_help();
+          break;
         }
       } else if (get_pad_new(0) & (PAD_UP | PAD_LEFT)) {
         cursor = (cursor + 2) % 3;
       } else if (get_pad_new(0) & (PAD_DOWN | PAD_RIGHT | PAD_SELECT)) {
         cursor = (cursor + 1) % 3;
+      }
+      break;
+    case Help:
+      if (get_pad_new(0) & (PAD_START | PAD_A | PAD_RIGHT | PAD_DOWN)) {
+        if (cursor == 0) {
+          cursor = 1;
+          go_to_help();
+        } else {
+          go_to_title();
+        }
+      } else if (get_pad_new(0) & (PAD_B | PAD_LEFT | PAD_UP)) {
+        if (cursor == 1) {
+          cursor = 0;
+          go_to_help();
+        } else {
+          go_to_title();
+        }
       }
       break;
     case PlayerWaitRoll:
