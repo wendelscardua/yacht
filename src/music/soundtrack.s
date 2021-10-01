@@ -4,20 +4,50 @@ soundtrack_music_data:
 	.byte 1
 	.word @instruments
 	.word @samples-3
-	.word @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4,307,256 ; fEelings
+	.word @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4,204,170 ; Pomp and Circumstance - Haley Halcyon
 
 @instruments:
 	.byte $30 ;instrument $00
-	.word @env3,@env0,@env0
+	.word @env6,@env0,@env0
 	.byte $00
 	.byte $b0 ;instrument $01
-	.word @env1,@env0,@env0
-	.byte $00
-	.byte $b0 ;instrument $02
 	.word @env2,@env0,@env0
 	.byte $00
+	.byte $b0 ;instrument $02
+	.word @env3,@env0,@env0
+	.byte $00
+	.byte $70 ;instrument $03
+	.word @env1,@env0,@env0
+	.byte $00
 	.byte $30 ;instrument $04
-	.word @env1,@env4,@env0
+	.word @env2,@env9,@env0
+	.byte $00
+	.byte $30 ;instrument $05
+	.word @env4,@env0,@env0
+	.byte $00
+	.byte $30 ;instrument $06
+	.word @env5,@env0,@env11
+	.byte $00
+	.byte $b0 ;instrument $07
+	.word @env7,@env0,@env0
+	.byte $00
+	.byte $70 ;instrument $08
+	.word @env7,@env0,@env0
+	.byte $00
+	.byte $30 ;instrument $09
+	.word @env7,@env0,@env0
+	.byte $00
+	.byte $30 ;instrument $0a
+	.word @env8,@env0,@env0
+	.byte $00
+	.byte $b0 ;instrument $0b
+	.word @env8,@env10,@env0
+	.byte $00
+	.byte $b0 ;instrument $0c
+	.word @env8,@env0,@env0
+	.byte $00
+	.byte $30 ;instrument $0d
+	.word @env6,@env0,@env0
 	.byte $00
 
 @samples:
@@ -88,55 +118,102 @@ soundtrack_music_data:
 @env0:
 	.byte $c0,$00,$00
 @env1:
-	.byte $c3,$c7,$c5,$c4,$c3,$c2,$c1,$c1,$c0,$00,$08
+	.byte $cf,$cc,$c9,$c6,$c3,$c0,$00,$05
 @env2:
-	.byte $c4,$c3,$c2,$c1,$c0,$00,$04
+	.byte $c3,$c7,$c5,$c4,$c3,$c2,$c1,$c1,$c0,$00,$08
 @env3:
-	.byte $cf,$05,$cf,$00,$02
+	.byte $c4,$c3,$c2,$c1,$c0,$00,$04
 @env4:
+	.byte $cf,$c9,$c6,$c4,$c2,$c1,$c0,$00,$06
+@env5:
+	.byte $cf,$03,$c0,$00,$02
+@env6:
+	.byte $cf,$05,$cf,$00,$02
+@env7:
+	.byte $c8,$cf,$cc,$c8,$c6,$c4,$c2,$c0,$00,$07
+@env8:
+	.byte $cf,$ce,$cd,$cc,$cb,$ca,$c9,$c9,$c8,$c8,$c7,$c7,$c6,$c6,$c5,$c5
+	.byte $c4,$02,$c3,$02,$c2,$02,$c1,$03,$c0,$00,$18
+@env9:
 	.byte $c0,$c0,$bf,$bd,$00,$03
+@env10:
+	.byte $c0,$c0,$cc,$00,$02
+@env11:
+	.byte $e0,$f8,$ff,$ff,$ff,$00,$04
 
 
-; fEelings
+; Pomp and Circumstance - Haley Halcyon
 @song0ch0:
-	.byte $fb,$07
+	.byte $fb,$0c
 @song0ch0loop:
 @ref0:
-	.byte $82,$32,$85,$3f,$39,$3e,$85,$32,$85,$3f,$39,$34,$85,$32,$85,$39
-	.byte $41,$44,$85,$45,$41,$41,$3b,$32,$85,$43,$41,$3f,$3b,$3d,$32,$89
+	.byte $98,$37,$37,$37,$37,$31,$31,$31,$31,$3b,$3b,$37,$37,$3b,$3b,$37
+	.byte $37,$29,$29,$2d,$2d,$27,$27,$27,$27,$31,$31,$2d,$2d,$29,$29,$27
+	.byte $26,$81
+@ref1:
+	.byte $37,$37,$37,$37,$31,$31,$31,$31,$3b,$3b,$37,$37,$3b,$3b,$37,$37
+	.byte $29,$29,$2d,$2d,$27,$27,$27,$27,$29,$29,$27,$27,$29,$41,$3f,$3c
+	.byte $81
+@ref2:
+	.byte $33,$33,$37,$37,$31,$31,$31,$31,$3b,$3b,$37,$37,$31,$31,$31,$30
+	.byte $81
 	.byte $fd
 	.word @song0ch0loop
 
-; fEelings
+; Pomp and Circumstance - Haley Halcyon
 @song0ch1:
 @song0ch1loop:
-@ref1:
-	.byte $84,$4a,$89,$51,$52,$85,$4a,$89,$51,$4c,$85,$4a,$89,$59,$5c,$85
-	.byte $5c,$85,$58,$85,$4a,$85,$5a,$85,$57,$53,$4b,$52,$89
+@ref3:
+	.byte $98,$31,$31,$2d,$2d,$29,$29,$27,$27,$29,$29,$29,$29,$35,$35,$27
+	.byte $27,$37,$37,$3b,$35,$37,$37,$31,$31,$3b,$3b,$35,$35,$33,$33,$33
+	.byte $32,$81
+@ref4:
+	.byte $31,$31,$2d,$2d,$29,$29,$27,$27,$29,$29,$29,$29,$35,$35,$27,$27
+	.byte $37,$37,$3b,$35,$37,$37,$2d,$2d,$3b,$3b,$37,$37,$37,$37,$37,$36
+	.byte $81
+@ref5:
+	.byte $41,$41,$45,$3f,$41,$41,$3b,$3b,$45,$45,$3f,$3f,$37,$37,$37,$36
+	.byte $81
 	.byte $fd
 	.word @song0ch1loop
 
-; fEelings
+; Pomp and Circumstance - Haley Halcyon
 @song0ch2:
 @song0ch2loop:
-@ref2:
-	.byte $f9,$85
+@ref6:
+	.byte $86,$58,$85,$56,$58,$5d,$52,$85,$4e,$85,$4a,$85,$48,$4a,$4f,$44
+	.byte $85,$00,$85,$48,$85,$4c,$4f,$52,$5c,$85,$4f,$01,$58,$83,$00,$58
+	.byte $57,$52,$4e,$89,$00,$81
+@ref7:
+	.byte $58,$85,$56,$58,$5d,$52,$85,$4e,$85,$4a,$85,$48,$4a,$4f,$44,$85
+	.byte $00,$85,$48,$85,$4c,$4f,$52,$5c,$85,$4f,$01,$62,$83,$00,$62,$61
+	.byte $5c,$60,$89,$00,$81
+@ref8:
+	.byte $52,$85,$56,$59,$5c,$66,$85,$59,$01,$62,$83,$00,$62,$61,$5c,$58
+	.byte $89,$00,$81
 	.byte $fd
 	.word @song0ch2loop
 
-; fEelings
+; Pomp and Circumstance - Haley Halcyon
 @song0ch3:
 @song0ch3loop:
-@ref3:
-	.byte $86,$20,$8d,$20,$8d,$20,$8d,$20,$8d,$20,$8d,$20,$8d,$20,$8d,$20
-	.byte $8d
+@ref9:
+	.byte $f9,$85
+@ref10:
+	.byte $f9,$85
+@ref11:
+	.byte $bf
 	.byte $fd
 	.word @song0ch3loop
 
-; fEelings
+; Pomp and Circumstance - Haley Halcyon
 @song0ch4:
 @song0ch4loop:
-@ref4:
+@ref12:
 	.byte $f9,$85
+@ref13:
+	.byte $f9,$85
+@ref14:
+	.byte $bf
 	.byte $fd
 	.word @song0ch4loop
