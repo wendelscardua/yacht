@@ -45,6 +45,11 @@ unsigned char histo_dice[7];
 unsigned char straight_count, straight_missing;
 unsigned char dice_sfx_counter;
 
+#define SFX_TOGGLE 0
+#define SFX_SELECT 1
+#define SFX_START 2
+#define SFX_THE_END 3
+
 #define ONES 0
 #define TWOS 1
 #define THREES 2
@@ -609,24 +614,30 @@ void main (void) {
       if (get_pad_new(0) & (PAD_START | PAD_A)) {
         switch(cursor) {
         case 0:
+          sfx_play(SFX_START, 0);
           start_game();
           break;
         case 1:
+          sfx_play(SFX_SELECT, 0);
           cursor = 0;
           go_to_help();
           break;
         case 2:
+          sfx_play(SFX_SELECT, 0);
           go_to_scores();
           break;
         }
       } else if (get_pad_new(0) & (PAD_UP | PAD_LEFT)) {
+        sfx_play(SFX_TOGGLE, 0);
         cursor = (cursor + 2) % 3;
       } else if (get_pad_new(0) & (PAD_DOWN | PAD_RIGHT | PAD_SELECT)) {
+        sfx_play(SFX_TOGGLE, 0);
         cursor = (cursor + 1) % 3;
       }
       break;
     case Help:
       if (get_pad_new(0) & (PAD_START | PAD_A | PAD_RIGHT | PAD_DOWN)) {
+        sfx_play(SFX_TOGGLE, 0);
         if (cursor == 0) {
           cursor = 1;
           go_to_help();
@@ -634,6 +645,7 @@ void main (void) {
           go_to_title();
         }
       } else if (get_pad_new(0) & (PAD_B | PAD_LEFT | PAD_UP)) {
+        sfx_play(SFX_TOGGLE, 0);
         if (cursor == 1) {
           cursor = 0;
           go_to_help();
@@ -644,11 +656,13 @@ void main (void) {
       break;
     case Scores:
       if (get_pad_new(0)) {
+        sfx_play(SFX_TOGGLE, 0);
         go_to_title();
       }
       break;
     case PlayerWaitRoll:
       if (get_pad_new(0) & PAD_A) {
+        sfx_play(SFX_SELECT, 0);
         go_to_player_rolling();
       }
       break;
@@ -669,9 +683,11 @@ void main (void) {
     case PlayerMayReroll:
       rolling_dice();
       if (get_pad_new(0) & PAD_A) {
+        sfx_play(SFX_SELECT, 0);
         roll_die(cursor);
         ++cursor;
       } else if (get_pad_new(0) & PAD_B) {
+        sfx_play(SFX_TOGGLE, 0);
         ++cursor;
       }
       if (cursor == 5) {
@@ -688,14 +704,17 @@ void main (void) {
       break;
     case PlayerSelectScoring:
       if (get_pad_new(0) & PAD_UP) {
+        sfx_play(SFX_TOGGLE, 0);
         do {
           cursor = (cursor + 11) % 12;
         } while(player_score_locked[cursor]);
       } else if (get_pad_new(0) & PAD_DOWN) {
+        sfx_play(SFX_TOGGLE, 0);
         do {
           cursor = (cursor + 1) % 12;
         } while(player_score_locked[cursor]);
       } else if (get_pad_new(0) & PAD_A) {
+        sfx_play(SFX_SELECT, 0);
         player_score_locked[cursor] = 1;
         player_points += player_score[cursor];
         display_score(player_points, NTADR_A(20, 16));
@@ -731,6 +750,7 @@ void main (void) {
       if (temp_y > 30 || (temp_y > 15 && temp_x - cursor > 4)) {
         temp_y = 0;
         if (cursor == temp_x) {
+          sfx_play(SFX_SELECT, 0);
           cpu_score_locked[cursor] = 1;
           cpu_points += cpu_score[cursor];
           display_score(cpu_points, NTADR_A(25, 16));
@@ -744,11 +764,13 @@ void main (void) {
           clear_vram_buffer();
           turns++;
           if (turns == 12) {
+            sfx_play(SFX_THE_END, 1);
             go_to_game_end();
           } else {
             go_to_player_wait_roll();
           }
         } else {
+          sfx_play(SFX_TOGGLE, 0);
           do {
             cursor = (cursor + 1) % 12;
           } while(cpu_score_locked[cursor]);
@@ -757,6 +779,7 @@ void main (void) {
       break;
     case GameEnd:
       if (get_pad_new(0) & PAD_START) {
+        sfx_play(SFX_TOGGLE, 0);
         go_to_title();
       }
       break;
