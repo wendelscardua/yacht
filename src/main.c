@@ -220,10 +220,10 @@ void rolling_dice (void) {
       dice_roll_counter[i] += (dice_roll_speed[i] + 1) / 2;
       if (dice_roll_counter[i] >= 60) {
         dice_roll_counter[i] -= 60;
-
+        temp = dice[i];
         do {
           dice[i] = rand8() & 7;
-        } while (!dice[i] || dice[i] == 7);
+        } while (!dice[i] || dice[i] == 7 || dice[i] == temp);
 
         render_die(i);
         changed = 1;
