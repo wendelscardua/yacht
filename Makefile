@@ -35,7 +35,8 @@ assets/nametables.o: assets/nametables.s assets/nametables.h \
                      assets/nametables/main.rle \
                      assets/nametables/title.rle \
                      assets/nametables/help1.rle \
-                     assets/nametables/help2.rle
+                     assets/nametables/help2.rle \
+                     assets/nametables/scores.rle
 	ca65 $< ${CA65_FLAGS}
 
 src/music/soundtrack.s: src/music/soundtrack.txt

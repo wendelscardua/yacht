@@ -26,6 +26,7 @@ unsigned int temp_int;
 enum game_state {
                  Title,
                  Help,
+                 Scores,
                  PlayerWaitRoll,
                  PlayerRolling,
                  PlayerMayReroll,
@@ -74,7 +75,8 @@ unsigned char double_buffer[32];
 
 #pragma bss-name(push, "XRAM")
 // extra RAM at $6000-$7fff
-unsigned char wram_array[0x2000];
+unsigned int wram_start;
+unsigned int player_wins, cpu_wins, player_high_score, cpu_high_score;
 
 #pragma bss-name(pop)
 
@@ -164,6 +166,12 @@ void go_to_cpu_rolling (void) {
   reroll_count = 0;
 }
 
+void init_wram (void) {
+  if (wram_start != 0xcafe)
+    memfill(&wram_start,0,0x2000);
+  wram_start = 0xcafe;
+}
+
 void start_game (void) {
   if (unseeded) {
     seed_rng();
@@ -178,8 +186,6 @@ void start_game (void) {
   // draw some things
   vram_adr(NTADR_A(0,0));
   unrle(main_nametable);
-
-  memfill(wram_array,0,0x2000);
 
   for(i = 0; i < 5; ++i) {
     dice[i] = i + 1;
@@ -411,6 +417,22 @@ void compute_available_scores (unsigned char *score, unsigned char *score_locked
   }
 }
 
+void go_to_scores (void) {
+  pal_fade_to(4, 0);
+  ppu_off(); // screen off
+  // draw some things
+  vram_adr(NTADR_A(0,0));
+  unrle(scores_nametable);
+
+  ppu_on_all(); //	turn on screen
+  pal_fade_to(0, 4);
+  current_game_state = Scores;
+  display_score(player_wins, NTADR_A(18, 5));
+  display_score(cpu_wins, NTADR_A(18, 6));
+  display_score(player_high_score, NTADR_A(24, 9));
+  display_score(cpu_high_score, NTADR_A(24, 10));
+}
+
 void go_to_player_may_reroll (void) {
   current_game_state = PlayerMayReroll;
   stop_dice = 0;
@@ -441,12 +463,16 @@ void go_to_game_end (void) {
   current_game_state = GameEnd;
   if (player_points > cpu_points) {
     multi_vram_buffer_horz(text_box_player_wins, 22, NTADR_A(4, 24));
+    ++player_wins;
   } else if (player_points < cpu_points) {
     multi_vram_buffer_horz(text_box_cpu_wins, 22, NTADR_A(4, 24));
+    ++cpu_wins;
   } else {
     multi_vram_buffer_horz(text_box_draw, 22, NTADR_A(4, 24));
   }
   multi_vram_buffer_horz(text_box_press_start, 22, NTADR_A(4, 25));
+  if (player_points > player_high_score) player_high_score = player_points;
+  if (cpu_points > cpu_high_score) cpu_high_score = cpu_points;
 }
 
 void cpu_ai (void) {
@@ -549,9 +575,7 @@ void main (void) {
   irq_array[0] = 0xff; // end of data
   set_irq_ptr(irq_array); // point to this array
 
-  // clear the WRAM, not done by the init code
-  // memfill(void *dst,unsigned char value,unsigned int len);
-  memfill(wram_array,0,0x2000);
+  init_wram();
 
   ppu_off(); // screen off
   pal_bg(palette_bg); //	load the BG palette
@@ -591,6 +615,9 @@ void main (void) {
           cursor = 0;
           go_to_help();
           break;
+        case 2:
+          go_to_scores();
+          break;
         }
       } else if (get_pad_new(0) & (PAD_UP | PAD_LEFT)) {
         cursor = (cursor + 2) % 3;
@@ -613,6 +640,11 @@ void main (void) {
         } else {
           go_to_title();
         }
+      }
+      break;
+    case Scores:
+      if (get_pad_new(0)) {
+        go_to_title();
       }
       break;
     case PlayerWaitRoll:
