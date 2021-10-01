@@ -37,7 +37,7 @@ map_text.each do |line|
 
   case mode
   when :modules_list
-    if (m = line.match(/\A\s*(?<name>[^.]*\.o):/))
+    if (m = line.match(/\A\s*(?<name>[^\s]*):/))
       module_data << { module: m['name'], segments: [] }
     elsif (m = line.match(/\A\s+(?<segment>\S+)\s+Offs=(?<offset>\S+)\s+Size=(?<size>\S+)\s+Align=(?<align>\S+)\s+Fill=(?<fill>\S+)/))
       module_data.last[:segments] << {
